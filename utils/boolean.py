@@ -1,5 +1,7 @@
+import tt
 from tt import BooleanExpression
 import re
+from nltk.tokenize import RegexpTokenizer
 
 BooleanOperator = ['AND', 'OR', 'NOT']
 
@@ -36,20 +38,24 @@ def remove_non_index_term(query, inverted_index):
 
 def tokenize_query(query):
     tokenized_query = []
-    for token in query.split(' '):
-        tokenized_query.append(token.upper())
+    tokenizer = RegexpTokenizer(r'(\w+)')
+    tokens = tokenizer.tokenize(query)
+    for token in tokens:
+        if not re.match(r'.*\d+.*', token):
+            tokenized_query.append(token.upper())
     return tokenized_query
 
 
 def transformation_query(query, inverted_index):
     tokenized_query = tokenize_query(query)
+    print(tokenized_query)
     filtered_query = remove_non_index_term(tokenized_query, inverted_index)
     filtered_query = remove_non_supported_tokens(filtered_query)
     boolean_query = ""
     for token in filtered_query:
         boolean_query += token
         boolean_query += " "
-        boolean_query += "and "
+        boolean_query += "AND "
     boolean_query = boolean_query[:len(boolean_query) - 5]
     return transformation_query_to_postfixe(boolean_query)
 
@@ -136,21 +142,23 @@ def boolean_operator_processing_with_inverted_index(BoolOperator, posting_term1,
 # Traitement d'une requête booleenne
 
 def processing_boolean_query_with_inverted_index(booleanOperator, query, inverted_index):
-    query = transformation_query(query, inverted_index)
-    relevant_docs = {}
+    try:
+        query = transformation_query(query, inverted_index)
+    except tt.errors.grammar.EmptyExpressionError:
+        return []
     evaluation_stack = []
     for term in query:
-        if term.upper() not in booleanOperator:
-            evaluation_stack.append(inverted_index[term.upper()])
+        if term not in booleanOperator:
+            evaluation_stack.append(inverted_index[term])
         else:
             if term.upper() == "NOT":
                 operande = evaluation_stack.pop()
                 eval_prop = boolean_operator_processing_with_inverted_index(
-                    term.upper(), evaluation_stack.pop(), operande)
+                    term, evaluation_stack.pop(), operande)
                 evaluation_stack.append(eval_prop[0])
                 evaluation_stack.append(eval_prop[0])
             else:
-                operator = term.upper()
+                operator = term
                 eval_prop = boolean_operator_processing_with_inverted_index(
                     operator, evaluation_stack.pop(), evaluation_stack.pop())
                 evaluation_stack.append(eval_prop[0])
