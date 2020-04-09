@@ -1,8 +1,9 @@
 from collections import OrderedDict
+from utils.collection_processing import get_term_weigth
 import pickle
 
 
-def build_inverted_index(collection, type_index):
+def build_inverted_index(collection, type_index, recipes_df=None):
     # On considère ici que la collection est pré-traitée
     inverted_index = OrderedDict()
     if type_index == 1:
@@ -37,8 +38,27 @@ def build_inverted_index(collection, type_index):
                         inverted_index[term][document] = [1, [n]]
                 else:
                     inverted_index[term] = OrderedDict()
-                    inverted_index[term][document] = [1, [n]]
+                    inverted_index[term][document] = [1, [n]]           
 
+    return inverted_index
+
+def build_inverted_index_vextorial(collection, recipes_df):
+    norm_factor_dict = {}
+    inverted_index = OrderedDict()
+    for document in collection:
+        norm_factor_dict[document] = 0
+        for term in collection[document]:
+            weigth_term = get_term_weigth(document, term, recipes_df)
+            if term in inverted_index.keys():
+                if document not in inverted_index[term]:
+                    inverted_index[term].append([document,weigth_term])
+            else:
+                inverted_index[term] = [[document,weigth_term]]
+            norm_factor_dict[document] += weigth_term**2
+    for term in inverted_index:
+        for i,(document,weigth) in enumerate(inverted_index[term]):
+            norm_factor = norm_factor_dict[document]
+            inverted_index[term][i] = [document,weigth,norm_factor]
     return inverted_index
 
 # Ecriture sur disque

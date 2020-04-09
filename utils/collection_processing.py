@@ -94,3 +94,14 @@ def get_pre_processed_collection(filename):
     recipes_df = load_data(filename)
     collection = build_collection_from_df(recipes_df)
     return pre_process_collection(collection)
+
+def get_term_weigth(document_id, term, recipes_df):
+    step_list = recipes_df[recipes_df.id==document_id]['ingredients'].reset_index()['ingredients'][0]
+    step_list = step_list.split(',')
+    for pos,ingredients in enumerate(step_list):
+        if re.findall(term,ingredients.upper()):
+            return weigth_function(pos)
+    return 0
+
+def weigth_function(pos,ratio=1.2,first_val=1):
+    return (1/ratio)**(pos)*first_val
