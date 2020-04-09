@@ -2,13 +2,13 @@ import re
 from absl import app, flags
 
 from utils.collection_processing import *
-# from utils.boolean import *
+from utils.boolean import *
 from utils.inverted_index import *
 from utils.vectorial import *
 
 
 def find_recipes(arg):
-    
+
     if FLAGS.model == 'boolean':
         recipes_df = load_data('./input/recipes.csv')
         inverted_index = load_inverted_index_pickle('./indexes/index.txt')
@@ -18,9 +18,13 @@ def find_recipes(arg):
 
     elif FLAGS.model == 'vectorial':
         recipes_df = load_data('./input/recipes.csv')
-        inverted_index = load_inverted_index_pickle('./indexes/index_numbered.txt')
-        result = vectorial_search(inverted_index,FLAGS.query,recipes_df.shape[0])
-        print(result)
+        inverted_index = load_inverted_index_pickle(
+            './indexes/index_numbered.txt')
+        result = vectorial_search(
+            inverted_index, FLAGS.query, recipes_df.shape[0])
+        for recipe_id in result:
+            print(recipes_df[recipes_df.id == recipe_id])
+            print('similarity : {}'.format(result[recipe_id]))
 
 
 if __name__ == "__main__":
