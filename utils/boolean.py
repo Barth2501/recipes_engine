@@ -46,7 +46,7 @@ def tokenize_query(query):
     return tokenized_query
 
 
-def transformation_query(query, inverted_index):
+def boolean_transformation_query(query, inverted_index):
     tokenized_query = tokenize_query(query)
     print(tokenized_query)
     filtered_query = remove_non_index_term(tokenized_query, inverted_index)
@@ -143,7 +143,7 @@ def boolean_operator_processing_with_inverted_index(BoolOperator, posting_term1,
 
 def processing_boolean_query_with_inverted_index(booleanOperator, query, inverted_index):
     try:
-        query = transformation_query(query, inverted_index)
+        query = boolean_transformation_query(query, inverted_index)
     except tt.errors.grammar.EmptyExpressionError:
         return []
     evaluation_stack = []

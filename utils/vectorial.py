@@ -21,14 +21,14 @@ def tokenize_query(query):
     return tokenized_query
 
 
-def query_transformation(query, inverted_index):
+def query_transformation_vectorial(query, inverted_index):
     tokenized_query = tokenize_query(query)
     filtered_query = remove_non_index_term(tokenized_query, inverted_index)
     return filtered_query
 
 
 def vectorial_search(inverted_index, query, nb_doc):
-    query = query_transformation(query, inverted_index)
+    query = query_transformation_vectorial(query, inverted_index)
     relevant_recipes = {}
     for term in query:
         weigth_q = 1
