@@ -2,6 +2,7 @@ import pandas as pd
 import re
 import collections
 from nltk.tokenize import RegexpTokenizer
+import spacy
 
 
 def load_data(filename):
@@ -42,7 +43,7 @@ def recipe_tokenize(recipe):
         filt_tokens = []
         for token in tokens:
             if not re.match(r'.*\d+.*', token):
-                filt_tokens.append(token.upper())
+                filt_tokens.append(token)
         return filt_tokens
 
 
@@ -85,9 +86,21 @@ def remove_stop_words(collection, stop_word_file):
     return collection_filtered
 
 
+def collection_lemmatize(collection):
+    collection_lemmatized = {}
+    nlp = spacy.load('fr_core_news_md')
+    for i in collection:
+        collection_lemmatized[i] = []
+        for j in collection[i]:
+            ingredients = nlp(j)
+            for token in ingredients:
+                collection_lemmatized[i].append(token.lemma_.upper())
+    return collection_lemmatized
+
+
 def pre_process_collection(collection):
-    collection = remove_stop_words(collection, STOP_WORDS)
-    return collection
+    lemmatized_collection = collection_lemmatize(collection)
+    return remove_stop_words(lemmatized_collection)
 
 
 def get_pre_processed_collection(filename):
@@ -95,13 +108,16 @@ def get_pre_processed_collection(filename):
     collection = build_collection_from_df(recipes_df)
     return pre_process_collection(collection)
 
+
 def get_term_weigth(document_id, term, recipes_df):
-    step_list = recipes_df[recipes_df.id==document_id]['ingredients'].reset_index()['ingredients'][0]
+    step_list = recipes_df[recipes_df.id == document_id]['ingredients'].reset_index()[
+        'ingredients'][0]
     step_list = step_list.split(',')
-    for pos,ingredients in enumerate(step_list):
-        if re.findall(term,ingredients.upper()):
+    for pos, ingredients in enumerate(step_list):
+        if re.findall(term, ingredients.upper()):
             return weigth_function(pos)
     return 0
 
-def weigth_function(pos,ratio=1.2,first_val=1):
+
+def weigth_function(pos, ratio=1.2, first_val=1):
     return (1/ratio)**(pos)*first_val
